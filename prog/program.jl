@@ -219,9 +219,9 @@ function StabilityRace(len, startRange, noise, name)
     xs, ys, zs = [], [], []
     
     for i in 1:len
-        push!(xs, checkChange(t, GramSchmidt; verbose = false, noise = org))
-        push!(ys, checkChange(t, MGS;         verbose = false, noise = org))
-        push!(zs, checkChange(t, Householder; verbose = false, noise = org))
+        push!(xs, checkChange(t, GramSchmidt; verbose = false, noise = perturb))
+        push!(ys, checkChange(t, MGS;         verbose = false, noise = perturb))
+        push!(zs, checkChange(t, Householder; verbose = false, noise = perturb))
         
         t = perturb
         t = addRandomNoise(t, noise)
@@ -240,28 +240,28 @@ end
 function RandomRadiusRace(rad, it, tests, name)
     xs, ys, zs = [], [], []
     
-    for i in 1:it
+    for i in 3:it
         push!(xs, 0)
         push!(ys, 0)
         push!(zs, 0)
         
         for j in 1:tests
-            t = RandomMatrix(10, rad)
+            t = RandomMatrix(i, rad)
             
             Q, R = GramSchmidt(t)
-            xs[i] += abs(sum(t - Q*R))
+            xs[i-2] += abs(sum(t - Q*R))
             
             Q, R = MGS(t)
-            ys[i] += abs(sum(t - Q*R))
+            ys[i-2] += abs(sum(t - Q*R))
             
             Q, R = Householder(t)
-            zs[i] += abs(sum(t - Q*R))
+            zs[i-2] += abs(sum(t - Q*R))
         end
         
-        rad *= 2;
+        #rad *= 2;
     end
     
-    range = collect(1:it)
+    range = collect(3:it)
     
     p = plot(range,  log10.(xs ./ tests), title="Dokładność rozkładu losowych macierzy \\n- średnie rzędy błędów", xlabel="promień losowości", label ="Gram-Schmidt")
     plot!(range, log10.(ys ./ tests), label ="MGS")
@@ -270,10 +270,10 @@ function RandomRadiusRace(rad, it, tests, name)
     savefig(p, name)
 end
     
-for i in 1:10
-    StabilityRace(20, 100, 0.1, "stability"*string(i)*".png")
-end
+#for i in 1:10
+#    StabilityRace(20, 100, 0.1, "stability"*string(i)*".png")
+#end
 
 for i in 1:3
-    RandomRadiusRace(5, 20, 20, "random"*string(i)*".png")
+    RandomRadiusRace(5, 30, 20, "random"*string(i)*".png")
 end

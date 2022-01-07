@@ -177,6 +177,12 @@ function addRandomNoise(M, amount=0.01)
     return M+noise
 end
 
+function matNorm(M)
+    sum = 0
+    for i in M; sum += abs(i); end
+    return sum/(size(M, 1)*size(M, 2))
+end
+
 function checkChange(M, decomp; verbose = true, noise = true)
     noisy = noise
     if(noisy === true); noisy = addRandomNoise(M); end
@@ -202,9 +208,11 @@ function checkChange(M, decomp; verbose = true, noise = true)
         println("Average change in M-Q*R ", averageChange)
     end
     
-    return averageChange
+    return matNorm(M - q*r - noisy + qn*rn)
 
 end
+
+checkChange(t, Householder)
 
 # =================================================
 #           Wykresy
@@ -224,20 +232,19 @@ function StabilityRace(len, startRange, noise, name)
         push!(zs, checkChange(t, Householder; verbose = false, noise = perturb))
         
         t = perturb
-        t = addRandomNoise(t, noise)
+        perturb = addRandomNoise(t, noise)
     end
     
     range = collect(1:len)
     
-    p = plot(range, abs.(xs), title="Stabilność numeryczne - średnie błędy", xlabel="numer iteracji", label ="Gram-Schmidt")
-    plot!(range, abs.(ys), label ="MGS")
-    plot!(range, abs.(zs), label ="Householder")
+    x = plot(range, log10.(abs.(xs)), title="Stabilność numeryczne - rzędy błędów", xlabel="numer iteracji", label ="Gram-Schmidt")
+    plot!(range, log10.(abs.(ys)), label ="MGS")
+    plot!(range, log10.(abs.(zs)), label ="Householder")
 
-    savefig(p, name)
-
+    savefig(x, name)
 end
 
-function RandomRadiusRace(rad, it, tests, name)
+function SizeRace(rad, it, tests, name)
     xs, ys, zs = [], [], []
     
     for i in 3:it
@@ -249,13 +256,13 @@ function RandomRadiusRace(rad, it, tests, name)
             t = RandomMatrix(i, rad)
             
             Q, R = GramSchmidt(t)
-            xs[i-2] += abs(sum(t - Q*R))
+            xs[i-2] += matNorm(t - Q*R)
             
             Q, R = MGS(t)
-            ys[i-2] += abs(sum(t - Q*R))
+            ys[i-2] += matNorm(t - Q*R)
             
             Q, R = Householder(t)
-            zs[i-2] += abs(sum(t - Q*R))
+            zs[i-2] += matNorm(t - Q*R)
         end
         
         #rad *= 2;
@@ -263,17 +270,17 @@ function RandomRadiusRace(rad, it, tests, name)
     
     range = collect(3:it)
     
-    p = plot(range,  log10.(xs ./ tests), title="Dokładność rozkładu losowych macierzy \\n- średnie rzędy błędów", xlabel="promień losowości", label ="Gram-Schmidt")
+    p = plot(range,  log10.(xs ./ tests), title="Dokładność rozkładu losowych macierzy \\n- średnie rzędy błędów", xlabel="wielkość macierzy", label ="Gram-Schmidt")
     plot!(range, log10.(ys ./ tests), label ="MGS")
     plot!(range, log10.(zs ./ tests), label ="Householder")
 
     savefig(p, name)
 end
     
-#for i in 1:10
-#    StabilityRace(20, 100, 0.1, "stability"*string(i)*".png")
-#end
+for i in 1:10
+    StabilityRace(20, 100, 0.01, "stability"*string(i)*".png")
+end
 
-for i in 1:3
-    RandomRadiusRace(5, 30, 20, "random"*string(i)*".png")
+for i in 1:10
+    SizeRace(5, 30, 20, "random"*string(i)*".png")
 end

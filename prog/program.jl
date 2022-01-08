@@ -276,6 +276,80 @@ function SizeRace(rad, it, tests, name)
 
     savefig(p, name)
 end
+
+function solveLinearSystem(M, ys, decomp=GramSchmidt)
+    q, r = decomp(M)
+    
+    ys = transpose(q)*transpose(ys)
+    
+    solutions = zeros(Float64, size(ys))
+    n = size(ys)[1]
+
+    for i in n:-1:1
+        sub = 0
+        for j in n:-1:i+1
+            sub += solutions[j]*r[i,j]
+        end
+        solutions[i]=(ys[i]-sub)/r[i,i]
+    end
+    
+    #x = r\ys for debug purposes only
+    return solutions
+end
+
+function GenerateRandomLinearSystem(siz, rad=10^8)
+    coeffs = RandomMatrix(siz, rad)
+    xs = rand(Float64, siz) .*rad .-(rad/2)
+    ys = zeros(Float64, siz)
+    for i in 1:siz
+        for j in 1:siz
+            ys[i] = ys[i]+coeffs[i,j]*xs[j]
+        end
+    end
+    return coeffs, xs, transpose(ys)
+end
+function CompareSystemSolution(decomp, M, xs, ys, verbose=false)
+    solution = solveLinearSystem(M, ys, decomp)
+    if verbose==true
+        println(xs-solution)
+        println(sum(xs-solution)/size(xs)[1])
+    end
+    return sum(xs-solution)/size(xs)[1]
+end
+
+function RandomRadiusSolutionRace(rad, it ,tests, name)
+    xs, ys, zs = [], [], []
+    
+    for i in 1:it
+        push!(xs, 0)
+        push!(ys, 0)
+        push!(zs, 0)
+        
+        for j in 1:tests
+            M, a, b = GenerateRandomLinearSystem(10, rad)
+            
+            
+            xs[i] += abs(CompareSystemSolution(GramSchmidt, M, a, b))#abs(sum(t - Q*R))
+            
+            ys[i] += abs(CompareSystemSolution(MGS, M, a, b))#abs(sum(t - Q*R))
+            
+
+            zs[i] += abs(CompareSystemSolution(Householder, M, a, b))#abs(sum(t - Q*R))
+        end
+        
+        rad *= 2;
+    end
+    
+    range = collect(1:it)
+    
+    p = plot(range,  log10.(xs ./ tests), label="Gram-Schmidt")
+    plot!(range, log10.(ys ./ tests), label="MGS")
+    plot!(range, log10.(zs ./ tests), label="Householder")
+    
+    savefig(p, name)
+end
+
+
     
 for i in 1:10
     StabilityRace(20, 100, 0.01, "stability"*string(i)*".png")
@@ -283,4 +357,8 @@ end
 
 for i in 1:10
     SizeRace(5, 30, 20, "random"*string(i)*".png")
+end
+
+for i in 1:10
+    RandomRadiusSolutionRace(0.001, 10, 100, "linear"*string(i)*".png")
 end

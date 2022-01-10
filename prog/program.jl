@@ -237,7 +237,7 @@ function StabilityRace(len, startRange, noise, name)
     
     range = collect(1:len)
     
-    x = plot(range, log10.(abs.(xs)), title="Stabilność numeryczne - rzędy błędów", xlabel="numer iteracji", label ="Gram-Schmidt")
+    x = plot(range, log10.(abs.(xs)), title="Stabilność numeryczna - rzędy błędów", xlabel="numer iteracji", label ="Gram-Schmidt")
     plot!(range, log10.(abs.(ys)), label ="MGS")
     plot!(range, log10.(abs.(zs)), label ="Householder")
 
@@ -342,7 +342,7 @@ function RandomRadiusSolutionRace(rad, it ,tests, name)
     
     range = collect(1:it)
     
-    p = plot(range,  log10.(xs ./ tests), label="Gram-Schmidt")
+    p = plot(range,  log10.(xs ./ tests), label="Gram-Schmidt", title="Poprawność rozwiązań układów liniowych \\n- średnie rzędy błędów", xlabel="wykładnik promienia losowości")
     plot!(range, log10.(ys ./ tests), label="MGS")
     plot!(range, log10.(zs ./ tests), label="Householder")
     
@@ -352,13 +352,13 @@ end
 
     
 for i in 1:10
-    StabilityRace(20, 100, 0.01, "stability"*string(i)*".png")
+    StabilityRace(20, 100, 0.01, "wykresy/stability"*string(i)*".png")
 end
 
 for i in 1:10
-    SizeRace(5, 30, 20, "random"*string(i)*".png")
+    SizeRace(5, 30, 20, "wykresy/random"*string(i)*".png")
 end
 
 for i in 1:10
-    RandomRadiusSolutionRace(0.001, 10, 100, "linear"*string(i)*".png")
+    RandomRadiusSolutionRace(0.001, 10, 100, "wykresy/linear"*string(i)*".png")
 end

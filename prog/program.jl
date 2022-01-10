@@ -99,8 +99,7 @@ function Householder(A)
     Q = I[1:n, 1:n]
     R = A
     # Iterowanie po rzędzach, branie podmacierzy i obliczanie kolejnych Hn
-    for i = 1:1:n-1 # jeśli dobrze rozumiem można iterować do n-1, dostaje się prawie identyczny wynik
-                  # jak na wikipedii, oprócz elementu [3, 3] który ma znak przeciwny w macierzy R, ale odpowiednio wychodzi macierz Q
+    for i = 1:1:n-1 
         Sub = R[i:n, i:n]
         Hp = Hpn(Hn(Sub[:, 1]))
         R = Hp*R
@@ -109,7 +108,6 @@ function Householder(A)
     
     return Q, UpperTriangular(R)
 end
-
 
 
 # Prosta funkcja porównująca macierze
@@ -129,30 +127,6 @@ function CompareMatrix(dest, result)
     maxErr, sumErr/(matSize*matSize)
 end
 
-# Funckja oceniająca jakość algorytmu rozkładu QRalgorithm macierzy mat
-# Używa Compare Matrix by określić jak dobrze Q^T Q = Id i QR = mat
-function AlgorithmQuality(mat, QRalgoritm; extended = false)
-    println("===============================\nQR comparison")
-    if extended; println("A = ",mat); end
-
-    q, r =  QRalgoritm(mat)
-
-    id = transpose(q)*q
-    em, ea = CompareMatrix(I, id)
-
-    if extended; println("Q = ",q); end
-    if extended; println("Q^T*Q = ", id); end
-    println("Average Error: ",ea,"\nMax Error: ",em)
-
-    qr = q*r
-    em, ea = CompareMatrix(mat, qr)
-    if extended; println("R = ",r); end
-    if extended; println("QR = ",qr); end
-    println("Average Error: ",ea,"\nMax Error: ",em)
-    print("\n")
-end
-
-t = transpose([12.0 6.0 -4.0; -51.0 167.0 24.0; 4.0 -68.0 -41.0])
 
 # Losowa macierz
 function RandomMatrix(size, rad)
@@ -163,10 +137,6 @@ function RandomMatrix(size, rad)
     end
     return R
 end 
-R = (RandomMatrix(30, 10^10))
-
-
-
 
 #add random noise
 function addRandomNoise(M, amount=0.01)
@@ -212,10 +182,8 @@ function checkChange(M, decomp; verbose = true, noise = true)
 
 end
 
-checkChange(t, Householder)
-
 # =================================================
-#           Wykresy
+#              Test stabilności numerycznej
 # =================================================
 
 function StabilityRace(len, startRange, noise, name)
@@ -243,6 +211,10 @@ function StabilityRace(len, startRange, noise, name)
 
     savefig(x, name)
 end
+
+# =================================================
+#              Test wielkości macierzy
+# =================================================
 
 function SizeRace(rad, it, tests, name)
     xs, ys, zs = [], [], []
@@ -317,6 +289,10 @@ function CompareSystemSolution(decomp, M, xs, ys, verbose=false)
     return sum(xs-solution)/size(xs)[1]
 end
 
+# =================================================
+#         Test rozwiązań układów liniowych
+# =================================================
+
 function RandomRadiusSolutionRace(rad, it ,tests, name)
     xs, ys, zs = [], [], []
     
@@ -349,6 +325,9 @@ function RandomRadiusSolutionRace(rad, it ,tests, name)
     savefig(p, name)
 end
 
+# =================================================
+#              Polecenia generowania
+# =================================================
 
     
 for i in 1:10
